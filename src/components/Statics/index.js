@@ -1,68 +1,103 @@
 import * as React from 'react';
-import { DataGrid } from '@mui/x-data-grid';
 import axios from 'axios'
-import addWeeks from 'date-fns/addWeeks';
+import { useDispatch, useSelector } from 'react-redux';
+import { add, reset } from '../../redux/statisticsSlice';
 import TextField from '@mui/material/TextField';
 import { LocalizationProvider } from '@mui/x-date-pickers-pro';
 import { AdapterDateFns } from '@mui/x-date-pickers-pro/AdapterDateFns';
 import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import moment from 'moment';
+import EnhancedTable from '../Table';
 
-
-const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'views', headerName: 'View', width: 130 },
-    { field: 'clicks', headerName: 'Click', width: 130 },
-    { field: 'cost', headerName: 'Cost', width: 130 },
-    { field: 'cpc', headerName: 'CPC', width: 130 },
-    { field: 'cpm', headerName: 'CPM', width: 130 },
-    { field: 'date', headerName: 'Date', width: 130 },
-
-];
 
 function Statics() {
 
+    const dispatch = useDispatch();
+    const state = useSelector(state => state.statistics)
+    const [date, setDate] = React.useState([null, null]);
 
-    const [values, setValues] = React.useState([]);
-    const [date, setValue] = React.useState([null, null]);
+    React.useEffect(() => {
+        debugger
+        if (state.resetData) {
+            fetchData()
+            setDate([null, null])
+            dispatch(reset(false))
+        }
+    }, [state.resetData])
 
     React.useEffect(() => {
         fetchData()
     }, [])
 
+    const headCells = [
+        {
+            id: 'id',
+            numeric: true,
+            disablePadding: false,
+            label: 'Id',
+        },
+        {
+            id: 'views',
+            numeric: true,
+            disablePadding: false,
+            label: 'View',
+        },
+        {
+            id: 'clicks',
+            numeric: true,
+            disablePadding: false,
+            label: 'Clicks',
+        },
+        {
+            id: 'cost',
+            numeric: true,
+            disablePadding: false,
+            label: 'Cost (£)',
+        },
+        {
+            id: 'cpc',
+            numeric: true,
+            disablePadding: false,
+            label: 'CPC (£)',
+        },
+        {
+            id: 'cpm',
+            numeric: true,
+            disablePadding: false,
+            label: 'CPM',
+        },
+        {
+            id: 'date',
+            numeric: false,
+            disablePadding: true,
+            label: 'Date',
+        },
+    ];
+
 
     const fetchData = async () => {
         let response = await axios.get(`http://localhost:8001/api/stats/list`)
         if (response.status == 200) {
-            setValues(response.data.data)
+            dispatch(add(response.data.data))
         }
     }
 
     const fetchDataFilteredData = async (value) => {
-        setValue(value)
+        setDate(value)
         console.log(value)
         if (value[0] && value[1]) {
             let fromDate = moment(value[0].toISOString()).format('YYYY-MM-DD'),
                 toDate = moment(value[1].toISOString()).format('YYYY-MM-DD')
             let response = await axios.get(`http://localhost:8001/api/stats/list?fromDate=${fromDate}&toDate=${toDate}`)
             if (response.status == 200) {
-                setValues(response.data.data)
+                dispatch(add(response.data.data))
             }
         }
     }
 
-    const handleResetData = async () => {
-        let response = await axios.delete("http://localhost:8001/api/stats/reset");
-        if (response.status === 200) {
-            setValues([])
-            console.log(response)
-        }
-    }
-
     return (
-        <div style={{ height: 400, width: '100%', margin: "15px" }}>
+        <div style={{ height: 400, width: '100%', margin: "5px" }}>
             <Box sx={{ mx: 2, display: "inline-flex", }}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                     <DateRangePicker
@@ -80,19 +115,10 @@ function Statics() {
                     />
                 </LocalizationProvider>
                 &nbsp;
-                <Button
-                    onClick={handleResetData}
-                    sx={{ my: 2, color: 'black', backgroundColor: "#1976d2", display: 'block' }}
-                >
-                    Reset All Data
-                </Button>
             </Box>
-            <DataGrid
-                rows={values}
-                columns={columns}
-                pageSize={5}
-                rowsPerPageOptions={[5]}
-            /* checkboxSelection */
+            <EnhancedTable
+                headers={headCells}
+                rows={state.stats}
             />
         </div >
     );

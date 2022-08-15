@@ -7,17 +7,17 @@ import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
-import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
-import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
-import { Link, useNavigate } from 'react-router-dom'
-import axios from "axios";
+import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux';
+import { reset } from '../../redux/statisticsSlice';
 
 const pages = ['Add Statics'];
 
 const ResponsiveAppBar = () => {
+    const dispatch = useDispatch()
     const [anchorElNav, setAnchorElNav] = React.useState(null);
     const [anchorElUser, setAnchorElUser] = React.useState(null);
     const navigate = useNavigate();
@@ -32,6 +32,10 @@ const ResponsiveAppBar = () => {
         setAnchorElNav(null);
         navigate('/add-statics');
     };
+
+    const handleResetData = () => {
+        dispatch(reset(true))
+    }
 
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
@@ -126,7 +130,12 @@ const ResponsiveAppBar = () => {
                             </Button>
                         ))}
                     </Box>
-                    
+                    <Button
+                        onClick={handleResetData}
+                        sx={{ my: 2, color: 'white', display: 'block' }}
+                    >
+                        Reset Data
+                    </Button>
                 </Toolbar>
             </Container>
         </AppBar>
